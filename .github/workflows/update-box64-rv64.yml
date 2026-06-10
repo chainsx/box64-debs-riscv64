@@ -1,16 +1,29 @@
-name: Update Box64 RV64 deb repository
+name: Build Box64 RV64 deb repository
 
 on:
-  schedule:
-    - cron: '0 6 * * *'
   workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: 'Build even when upstream commit.txt has not changed'
+        required: false
+        default: false
+        type: boolean
+      box64_branch:
+        description: 'Box64 branch or tag to build'
+        required: false
+        default: 'main'
+        type: string
 
 permissions:
   contents: write
 
+concurrency:
+  group: box64-rv64-deb-repository
+  cancel-in-progress: false
+
 jobs:
-  update-box64-rv64:
-    runs-on: ubuntu-24.04
+  build-box64-rv64:
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout repository
@@ -18,24 +31,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Build riscv64 package under QEMU
-        uses: uraimo/run-on-arch-action@v3
-        with:
-          arch: riscv64
-          distro: ubuntu22.04
-          githubToken: ${{ github.token }}
-          dockerRunArgs: |
-            --volume "${PWD}:/workspace"
-          install: |
-            /workspace/scripts/install-build-deps.sh
-          run: |
-            cd /workspace
-            git config --global --add safe.directory /workspace
-            PKG_MAINTAINER="${{ vars.PKG_MAINTAINER || 'Box64 RV64 Maintainer <noreply@example.com>' }}" \
-              ./scripts/build-box64-rv64.sh
+      - name: Install cross build dependencies
+        run: sudo ./scripts/install-build-deps.sh
+
+      - name: Build riscv64 package by cross compilation
+        env:
+          BOX64_BRANCH: ${{ inputs.box64_branch }}
+          FORCE_REBUILD: ${{ inputs.force_rebuild }}
+          PKG_MAINTAINER: ${{ vars.PKG_MAINTAINER || 'Box64 RV64 Maintainer <noreply@example.com>' }}
+        run: ./scripts/build-box64-rv64.sh
 
       - name: Import GPG key
-        if: ${{ hashFiles('exited_successfully.txt') == '' }}
+        if: ${{ hashFiles('exited_successfully.txt') == '' && secrets.GPG_PRIVATE_KEY != '' }}
         uses: crazy-max/ghaction-import-gpg@v6
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -43,12 +50,10 @@ jobs:
 
       - name: Rebuild and sign APT repository metadata
         if: ${{ hashFiles('exited_successfully.txt') == '' }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y dpkg-dev apt-utils gzip gnupg
-          GPG_KEY_ID="${{ secrets.GPG_KEY_ID }}" \
-          GPG_PASSPHRASE="${{ secrets.GPG_PASSPHRASE }}" \
-          ./scripts/update-apt-repo.sh
+        env:
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: ./scripts/update-apt-repo.sh
 
       - name: Commit repository update
         run: |
@@ -60,6 +65,7 @@ jobs:
 
           git config user.email "${{ vars.GIT_COMMIT_EMAIL || 'github-actions[bot]@users.noreply.github.com' }}"
           git config user.name "${{ vars.GIT_COMMIT_NAME || 'github-actions[bot]' }}"
+
           git add .
           git commit -m "Update box64 rv64 to commit $(cat commit.txt)" || exit 0
           git push

@@ -8,6 +8,7 @@ REPO_DIR="$ROOT/debian"
 : "${GPG_PASSPHRASE:=}"
 
 cd "$REPO_DIR"
+
 rm -f Packages Packages.gz Release Release.gpg InRelease
 
 dpkg-scanpackages --multiversion . /dev/null > Packages
@@ -19,6 +20,7 @@ if [[ -n "$GPG_KEY_ID" ]]; then
     --default-key "$GPG_KEY_ID" -abs -o Release.gpg Release
   gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" \
     --default-key "$GPG_KEY_ID" --clearsign -o InRelease Release
+
   cd "$ROOT"
   gpg --armor --export "$GPG_KEY_ID" > KEY.gpg
 else
