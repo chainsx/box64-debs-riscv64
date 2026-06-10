@@ -1,0 +1,4 @@
+work/
+*.tmp
+exited_successfully.txt
+.DS_Store

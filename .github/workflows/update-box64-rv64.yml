@@ -1,0 +1,65 @@
+name: Update Box64 RV64 deb repository
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-box64-rv64:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build riscv64 package under QEMU
+        uses: uraimo/run-on-arch-action@v3
+        with:
+          arch: riscv64
+          distro: ubuntu22.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/workspace"
+          install: |
+            /workspace/scripts/install-build-deps.sh
+          run: |
+            cd /workspace
+            git config --global --add safe.directory /workspace
+            PKG_MAINTAINER="${{ vars.PKG_MAINTAINER || 'Box64 RV64 Maintainer <noreply@example.com>' }}" \
+              ./scripts/build-box64-rv64.sh
+
+      - name: Import GPG key
+        if: ${{ hashFiles('exited_successfully.txt') == '' }}
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Rebuild and sign APT repository metadata
+        if: ${{ hashFiles('exited_successfully.txt') == '' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dpkg-dev apt-utils gzip gnupg
+          GPG_KEY_ID="${{ secrets.GPG_KEY_ID }}" \
+          GPG_PASSPHRASE="${{ secrets.GPG_PASSPHRASE }}" \
+          ./scripts/update-apt-repo.sh
+
+      - name: Commit repository update
+        run: |
+          if [[ -f exited_successfully.txt ]]; then
+            rm -f exited_successfully.txt
+            echo "No upstream Box64 change; nothing to commit."
+            exit 0
+          fi
+
+          git config user.email "${{ vars.GIT_COMMIT_EMAIL || 'github-actions[bot]@users.noreply.github.com' }}"
+          git config user.name "${{ vars.GIT_COMMIT_NAME || 'github-actions[bot]' }}"
+          git add .
+          git commit -m "Update box64 rv64 to commit $(cat commit.txt)" || exit 0
+          git push
