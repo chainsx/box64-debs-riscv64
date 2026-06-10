@@ -12,54 +12,6 @@ This repository follows the same operating model as `box64-debs`: a scheduled Gi
 
 Box32 is disabled by default. To enable it, set `ENABLE_BOX32=1` and optionally `ENABLE_BOX32_BINFMT=1` in the build step, then test carefully on your target distribution.
 
-## Repository layout
-
-```text
-.github/workflows/update-box64-rv64.yml          # Default workflow: QEMU riscv64 build on GitHub-hosted amd64 runner
-.github/workflows/update-box64-rv64-native.yml   # Optional workflow: native/self-hosted riscv64 runner
-scripts/install-build-deps.sh                    # Dependencies inside riscv64 build environment
-scripts/build-box64-rv64.sh                      # Clone, build, stage and package Box64
-scripts/update-apt-repo.sh                       # Generate Packages/Release/InRelease and export KEY.gpg
-debian/                                         # APT repository root published by GitHub Pages
-commit.txt                                      # Last upstream Box64 commit built
-box64-rv64.sources.in                           # Template for modern apt source file
-box64-rv64.list.in                              # Template for legacy apt source file
-```
-
-## GitHub settings
-
-Enable GitHub Pages for this repository and publish from the default branch root. The APT repository will then be available at:
-
-```text
-https://<GITHUB_USER_OR_ORG>.github.io/<REPO_NAME>/debian
-```
-
-Required repository secrets:
-
-```text
-GPG_PRIVATE_KEY      ASCII-armored private key used to sign Release metadata
-GPG_PASSPHRASE       passphrase for the private key
-GPG_KEY_ID           signing key ID, fingerprint, or signing email
-```
-
-Useful repository variables:
-
-```text
-PKG_MAINTAINER       e.g. Your Name <you@example.com>
-GIT_COMMIT_NAME      optional commit author name
-GIT_COMMIT_EMAIL     optional commit author email
-```
-
-## Create a signing key
-
-```bash
-gpg --quick-generate-key "Box64 RV64 APT <you@example.com>" rsa4096 sign 2y
-gpg --armor --export-secret-keys "Box64 RV64 APT <you@example.com>"
-gpg --armor --export "Box64 RV64 APT <you@example.com>" > KEY.gpg
-```
-
-Put the private key export into `GPG_PRIVATE_KEY`. Put the key email, long key ID, or fingerprint into `GPG_KEY_ID`.
-
 ## User installation
 
 Replace placeholders in `box64-rv64.sources.in`, or create the file directly on the target machine:
