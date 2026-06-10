@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       force_rebuild:
-        description: 'Build even when upstream commit.txt has not changed'
+        description: "Build even when upstream commit.txt has not changed"
         required: false
         default: false
         type: boolean
       box64_branch:
-        description: 'Box64 branch or tag to build'
+        description: "Box64 branch or tag to build"
         required: false
-        default: 'main'
+        default: "main"
         type: string
 
 permissions:
@@ -24,6 +24,12 @@ concurrency:
 jobs:
   build-box64-rv64:
     runs-on: ubuntu-22.04
+
+    env:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+      HAS_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY != '' }}
 
     steps:
       - name: Checkout repository
@@ -42,21 +48,23 @@ jobs:
         run: ./scripts/build-box64-rv64.sh
 
       - name: Import GPG key
-        if: ${{ hashFiles('exited_successfully.txt') == '' && secrets.GPG_PRIVATE_KEY != '' }}
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+        if: ${{ hashFiles('exited_successfully.txt') == '' && env.HAS_GPG_PRIVATE_KEY == 'true' }}
+        run: |
+          set -eux
+
+          mkdir -p ~/.gnupg
+          chmod 700 ~/.gnupg
+
+          printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import
 
       - name: Rebuild and sign APT repository metadata
         if: ${{ hashFiles('exited_successfully.txt') == '' }}
-        env:
-          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: ./scripts/update-apt-repo.sh
 
       - name: Commit repository update
         run: |
+          set -eux
+
           if [[ -f exited_successfully.txt ]]; then
             rm -f exited_successfully.txt
             echo "No upstream Box64 change; nothing to commit."
@@ -67,5 +75,11 @@ jobs:
           git config user.name "${{ vars.GIT_COMMIT_NAME || 'github-actions[bot]' }}"
 
           git add .
-          git commit -m "Update box64 rv64 to commit $(cat commit.txt)" || exit 0
+
+          if git diff --cached --quiet; then
+            echo "No repository changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update box64 rv64 to commit $(cat commit.txt)"
           git push
