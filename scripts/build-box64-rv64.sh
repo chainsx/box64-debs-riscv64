@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(pwd)"
-BOX64_BRANCH="${BOX64_BRANCH:-main}"
+BOX64_BRANCH="v0.4.2"
 FORCE_REBUILD="${FORCE_REBUILD:-false}"
 PKG_MAINTAINER="${PKG_MAINTAINER:-Box64 RV64 Maintainer <noreply@example.com>}"
 
