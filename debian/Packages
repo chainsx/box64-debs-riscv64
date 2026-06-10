@@ -1,0 +1,16 @@
+Package: box64-rv64
+Version: 20260610.7eeb5016
+Architecture: riscv64
+Maintainer: Box64 RV64 Maintainer <noreply@example.com>
+Depends: libc6
+Filename: ./box64-rv64_20260610.7eeb5016_riscv64.deb
+Size: 17175804
+MD5sum: 4e9172ee7e9c12832f3936d6d5352d3e
+SHA1: 5a0d75ec5ed02d3c755b1a0f80a33e5f0a9d8344
+SHA256: 432cff2ac7cb077a71f645acbe6f1a7b37a887c7b8f1e0acbdce4718e0ab819c
+Section: utils
+Priority: optional
+Description: Box64 x86_64 userspace emulator for RISC-V 64
+ Box64 lets you run x86_64 Linux programs on non-x86_64 Linux systems.
+ This package is cross-compiled for riscv64 with RV64 dynarec enabled.
+
