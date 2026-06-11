@@ -1,1 +1,0 @@
-deb [arch=riscv64 signed-by=/usr/share/keyrings/box64-rv64-archive-keyring.gpg] https://<GITHUB_USER_OR_ORG>.github.io/<REPO_NAME>/debian ./
