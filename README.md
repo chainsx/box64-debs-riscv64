@@ -29,7 +29,7 @@ Signed-By: /usr/share/keyrings/box64-rv64-archive-keyring.gpg
 APT
 
 sudo apt update
-sudo apt install box64-rv64
+sudo apt install box64
 ```
 
 ## Local cross build on an x86_64 Debian/Ubuntu machine
