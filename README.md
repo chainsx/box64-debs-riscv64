@@ -13,8 +13,6 @@ This repository builds Box64 packages by cross-compiling from a GitHub-hosted `u
 
 `box64-rv64gcv` is not a new Debian architecture; it is still a `riscv64` package. APT will not automatically verify whether the target CPU supports RVV, so install it only on RVV-capable hardware such as SpacemiT K3-class systems.
 
-Box32 is disabled by default. To enable it, set `ENABLE_BOX32=1` and optionally `ENABLE_BOX32_BINFMT=1` in the build step, then test carefully on your target distribution.
-
 ## User installation
 
 Replace placeholders in `box64-rv64.sources.in`, or create the file directly on the target machine:
