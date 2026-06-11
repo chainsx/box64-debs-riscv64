@@ -66,7 +66,7 @@ cmake -S "$ROOT/work/box64" -B "$ROOT/work/build" \
 
 cmake --build "$ROOT/work/build" --parallel "$(nproc)"
 
-PKG_VERSION="${BOX64_BRANCH}.$(date -u +%Y%m%d).${UPSTREAM_COMMIT:0:8}"
+PKG_VERSION="$(date -u +%Y%m%d).${BOX64_BRANCH}.${UPSTREAM_COMMIT:0:8}"
 PKG_NAME="box64"
 PKG_DIR="$ROOT/work/pkgroot"
 DEB_FILE="$ROOT/debian/${PKG_NAME}_${PKG_VERSION}_riscv64.deb"
