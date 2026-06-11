@@ -1,5 +1,0 @@
-Types: deb
-URIs: https://<GITHUB_USER_OR_ORG>.github.io/<REPO_NAME>/debian
-Suites: ./
-Architectures: riscv64
-Signed-By: /usr/share/keyrings/box64-rv64-archive-keyring.gpg
