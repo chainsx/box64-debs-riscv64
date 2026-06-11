@@ -43,5 +43,5 @@ sudo ./scripts/install-build-deps.sh
 The generated package will be placed under `debian/`:
 
 ```text
-debian/box64-rv64_*_riscv64.deb
+debian/box64*_riscv64.deb
 ```
