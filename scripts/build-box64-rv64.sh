@@ -16,15 +16,15 @@ git clone --depth=1 --branch "$BOX64_BRANCH" https://github.com/ptitSeb/box64.gi
 UPSTREAM_COMMIT="$(git -C "$ROOT/work/box64" rev-parse HEAD)"
 OLD_COMMIT=""
 
-if [[ -f "$ROOT/commit.txt" ]]; then
-  OLD_COMMIT="$(cat "$ROOT/commit.txt")"
-fi
+#if [[ -f "$ROOT/commit.txt" ]]; then
+#  OLD_COMMIT="$(cat "$ROOT/commit.txt")"
+#fi
 
-if [[ "$FORCE_REBUILD" != "true" && "$UPSTREAM_COMMIT" == "$OLD_COMMIT" ]]; then
-  echo "Upstream Box64 commit has not changed: $UPSTREAM_COMMIT"
-  touch "$ROOT/exited_successfully.txt"
-  exit 0
-fi
+#if [[ "$FORCE_REBUILD" != "true" && "$UPSTREAM_COMMIT" == "$OLD_COMMIT" ]]; then
+#  echo "Upstream Box64 commit has not changed: $UPSTREAM_COMMIT"
+#  touch "$ROOT/exited_successfully.txt"
+#  exit 0
+#fi
 
 RISCV_CC="$(command -v riscv64-linux-gnu-gcc)"
 RISCV_CXX="$(command -v riscv64-linux-gnu-g++)"
