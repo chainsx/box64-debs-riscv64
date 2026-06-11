@@ -11,8 +11,17 @@ on:
       box64_branch:
         description: "Box64 branch or tag to build"
         required: false
-        default: "main"
+        default: "v0.4.2"
         type: string
+      build_packages:
+        description: "Package set to build"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - all
+          - box64
+          - box64-rv64gcv
 
 permissions:
   contents: write
@@ -40,10 +49,11 @@ jobs:
       - name: Install cross build dependencies
         run: sudo ./scripts/install-build-deps.sh
 
-      - name: Build riscv64 package by cross compilation
+      - name: Build riscv64 packages by cross compilation
         env:
           BOX64_BRANCH: ${{ inputs.box64_branch }}
           FORCE_REBUILD: ${{ inputs.force_rebuild }}
+          BUILD_PACKAGES: ${{ inputs.build_packages }}
           PKG_MAINTAINER: ${{ vars.PKG_MAINTAINER || 'Box64 RV64 Maintainer <noreply@example.com>' }}
         run: ./scripts/build-box64-rv64.sh
 
@@ -51,10 +61,8 @@ jobs:
         if: ${{ hashFiles('exited_successfully.txt') == '' && env.HAS_GPG_PRIVATE_KEY == 'true' }}
         run: |
           set -eux
-
           mkdir -p ~/.gnupg
           chmod 700 ~/.gnupg
-
           printf '%s\n' "$GPG_PRIVATE_KEY" | gpg --batch --import
 
       - name: Rebuild and sign APT repository metadata
@@ -67,7 +75,7 @@ jobs:
 
           if [[ -f exited_successfully.txt ]]; then
             rm -f exited_successfully.txt
-            echo "No upstream Box64 change; nothing to commit."
+            echo "No upstream Box64 change and requested packages already exist; nothing to commit."
             exit 0
           fi
 
@@ -81,5 +89,5 @@ jobs:
             exit 0
           fi
 
-          git commit -m "Update box64 rv64 to commit $(cat commit.txt)"
+          git commit -m "Update Box64 riscv64 packages to commit $(cat commit.txt)"
           git push
